@@ -39,7 +39,7 @@ class MainController extends Controller {
             this.setState(() => {
                 this.data.list = items;
                 this.data.loading = false;
-                this.data.hasMore = items.length >= this.params.pagesize;
+                this.data.hasMore = true;
             });
         } catch (e) {
             showToast(`${e}\n${e.stack}`);
@@ -71,16 +71,26 @@ class MainController extends Controller {
                 headers: {
                     'User-Agent': USER_AGENT,
                     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json, text/javascript, */*; q=0.01',
+                    'Origin': 'https://www.manhuaren.com',
+                    'Referer': this.url
                 },
                 body: body
             });
             checkResponse(res, 'Request failed', endpoint);
             const json = await res.json();
-            if (!json || !Array.isArray(json.UpdateComicItems)) {
+            let responseItems = null;
+            if (json && Array.isArray(json.UpdateComicItems)) {
+                responseItems = json.UpdateComicItems;
+            } else if (json && Array.isArray(json.items)) {
+                responseItems = json.items;
+            } else if (json && json.Count === 0 && json.items === null) {
+                responseItems = [];
+            } else {
                 throw new Error('Unexpected manga-list response');
             }
-            const items = json.UpdateComicItems.map(item => {
+            const items = responseItems.map(item => {
                 if (!item || !item.UrlKey || !item.Title || !item.ShowPicUrlB) return null;
                 return {
                     title: item.Title,
