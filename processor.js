@@ -70,15 +70,11 @@ function imageUrlsFromPage(text) {
         if (urls.length > 0) return urls;
 
         const context = new ScriptContext();
-        try {
-            context.eval(source);
-            const result = context.eval('JSON.stringify(newImgs)');
-            if (typeof result === 'string') {
-                urls = JSON.parse(result);
-                if (Array.isArray(urls) && urls.length > 0) return urls;
-            }
-        } finally {
-            context.dispose();
+        context.eval(source);
+        const result = context.eval('JSON.stringify(newImgs)');
+        if (typeof result === 'string') {
+            urls = JSON.parse(result);
+            if (Array.isArray(urls) && urls.length > 0) return urls;
         }
     }
     throw new Error('Could not find manga page image URLs');
