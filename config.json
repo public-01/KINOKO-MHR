@@ -1,0 +1,10 @@
+{
+  "name": "manhuaren_ki",
+  "index": "index",
+  "appbar_elevation": 0,
+  "processor": "processor",
+  "extensions": [{
+    "icon": "search",
+    "index": "search"
+  }]
+}
