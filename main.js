@@ -65,7 +65,7 @@ class MainController extends Controller {
                 ['sort', params.sort],
                 ['iscopyright', params.iscopyright]
             ].map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join('&');
-            const endpoint = new URL(`dm5.ashx?d=${new Date().getTime()}`, this.url).toString();
+            const endpoint = new URL(`dm5.ashx?d=${encodeURIComponent(new Date().toString())}`, this.url).toString();
             const res = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
@@ -79,7 +79,9 @@ class MainController extends Controller {
                 body: body
             });
             checkResponse(res, 'Request failed', endpoint);
-            const json = await res.json();
+            const responseText = await res.text();
+            if (!responseText.trim()) throw new Error(`Manga-list paging returned an empty response: ${endpoint}`);
+            const json = JSON.parse(responseText);
             let responseItems = null;
             if (json && Array.isArray(json.UpdateComicItems)) {
                 responseItems = json.UpdateComicItems;

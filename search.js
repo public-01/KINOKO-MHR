@@ -95,18 +95,24 @@ class SearchController extends Controller {
                 ['f', '0'],
                 ['title', this.query]
             ].map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join('&');
-            const url = `${BASE_URL}pagerdata.ashx?d=${new Date().getTime()}`;
+            const url = `${BASE_URL}pagerdata.ashx?d=${encodeURIComponent(new Date().toString())}`;
+            const referer = `${BASE_URL}search?title=${encodeURIComponent(this.query)}&language=1&f=2`;
             const res = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'User-Agent': USER_AGENT,
                     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json, text/javascript, */*; q=0.01',
+                    'Origin': 'https://www.manhuaren.com',
+                    'Referer': referer
                 },
                 body: body
             });
             checkResponse(res, 'Search paging failed', url);
-            const data = await res.json();
+            const responseText = await res.text();
+            if (!responseText.trim()) throw new Error(`Search paging returned an empty response: ${url}`);
+            const data = JSON.parse(responseText);
             if (!Array.isArray(data)) throw new Error('Unexpected search response');
             const items = data.map(item => {
                 if (!item || !item.Url || !item.Title || !item.Pic) return null;
