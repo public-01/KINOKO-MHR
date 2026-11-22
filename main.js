@@ -1,3 +1,4 @@
+const checkResponse = require('./http');
 const PER_PAGE = 21;
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 
@@ -19,7 +20,7 @@ class MainController extends Controller {
         const res = await fetch(url, {
             headers: { 'User-Agent': USER_AGENT }
         });
-        if (!res.ok) throw new Error(`Request failed (${res.status}): ${url}`);
+        checkResponse(res, 'Request failed', url);
         return await res.text();
     }
 
@@ -74,7 +75,7 @@ class MainController extends Controller {
                 },
                 body: body
             });
-            if (!res.ok) throw new Error(`Request failed (${res.status}): ${endpoint}`);
+            checkResponse(res, 'Request failed', endpoint);
             const json = await res.json();
             if (!json || !Array.isArray(json.UpdateComicItems)) {
                 throw new Error('Unexpected manga-list response');

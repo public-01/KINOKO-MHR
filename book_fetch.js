@@ -1,3 +1,5 @@
+const checkResponse = require('./http');
+
 function parseData(text, url) {
     const doc = HTMLParser.parse(text);
     const titleNode = doc.querySelector('.detail-main-info-title');
@@ -38,6 +40,6 @@ module.exports = async function(url) {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
         }
     });
-    if (!res.ok) throw new Error(`Could not load manga details (${res.status}): ${url}`);
+    checkResponse(res, 'Could not load manga details', url);
     return parseData(await res.text(), url);
 };

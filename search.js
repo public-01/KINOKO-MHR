@@ -1,3 +1,4 @@
+const checkResponse = require('./http');
 const BASE_URL = 'https://www.manhuaren.com/';
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 
@@ -46,7 +47,7 @@ class SearchController extends Controller {
         try {
             const url = `${BASE_URL}search?title=${encodeURIComponent(text)}&language=1&f=2`;
             const res = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
-            if (!res.ok) throw new Error(`Search failed (${res.status})`);
+            checkResponse(res, 'Search failed', url);
             const html = await res.text();
             const items = this.parseData(html, url);
             this.page = 1;
@@ -104,7 +105,7 @@ class SearchController extends Controller {
                 },
                 body: body
             });
-            if (!res.ok) throw new Error(`Search paging failed (${res.status})`);
+            checkResponse(res, 'Search paging failed', url);
             const data = await res.json();
             if (!Array.isArray(data)) throw new Error('Unexpected search response');
             const items = data.map(item => {

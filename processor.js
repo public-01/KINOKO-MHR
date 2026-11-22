@@ -1,3 +1,4 @@
+const checkResponse = require('./http');
 const USER_AGENT = 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36';
 
 function readPackedString(source, position) {
@@ -78,7 +79,7 @@ class MangaProcessor extends Processor {
                     'Referer': 'https://www.manhuaren.com/'
                 }
             });
-            if (!res.ok) throw new Error(`Could not load chapter (${res.status}): ${url}`);
+            checkResponse(res, 'Could not load chapter', url);
             const images = imageUrlsFromPage(await res.text()).map(image => ({
                 url: image,
                 headers: {
