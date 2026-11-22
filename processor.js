@@ -57,10 +57,29 @@ function imageUrlsFromPage(text) {
     for (const scriptNode of scripts) {
         const source = scriptNode.text.trim();
         if (!source || (!source.includes('newImgs') && !source.includes('imgData'))) continue;
-        const decoded = source.includes('eval(function') ? unpack(source) : source;
+        let decoded = source;
+        if (source.includes('eval(function')) {
+            try {
+                decoded = unpack(source);
+            } catch (e) {
+                console.log(`Could not decode packed chapter script: ${e}`);
+            }
+        }
         if (!decoded.includes('newImgs')) continue;
-        const urls = decoded.match(/https?:\/\/[^"'\\\s]+/g) || [];
+        let urls = decoded.match(/https?:\/\/[^"'\\\s]+/g) || [];
         if (urls.length > 0) return urls;
+
+        const context = new ScriptContext();
+        try {
+            context.eval(source);
+            const result = context.eval('JSON.stringify(newImgs)');
+            if (typeof result === 'string') {
+                urls = JSON.parse(result);
+                if (Array.isArray(urls) && urls.length > 0) return urls;
+            }
+        } finally {
+            context.dispose();
+        }
     }
     throw new Error('Could not find manga page image URLs');
 }
@@ -91,6 +110,7 @@ class MangaProcessor extends Processor {
             this.save(true, state);
         } catch (e) {
             console.log(`Manhuaren download failed: ${e}\n${e.stack}`);
+            showToast(`漫畫人章節圖片載入失敗：${e}`);
             throw e;
         } finally {
             this.loading = false;
