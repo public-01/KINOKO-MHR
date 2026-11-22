@@ -1,5 +1,5 @@
 const checkResponse = require('./http');
-const PER_PAGE = 21;
+const PER_PAGE = 10;
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 
 class MainController extends Controller {
@@ -29,7 +29,7 @@ class MainController extends Controller {
         try {
             const text = await this.fetchPage(this.url);
             this.params = this.parseParams(text);
-            const items = await this.fetchListPage(1);
+            const items = this.parseInitialItems(text);
             if (items.length === 0) throw new Error('No manga items found on the page');
             this.page = 1;
             localStorage[`cache_${this.id}`] = JSON.stringify({
@@ -106,9 +106,20 @@ class MainController extends Controller {
         this.setState(() => { this.data.loading = true; });
         try {
             const items = await this.fetchListPage(this.page + 1);
+            const seen = new Set(this.data.list.map(item => {
+                const url = new URL(item.link);
+                return `${url.origin}${url.pathname}`.toLowerCase();
+            }));
+            const newItems = items.filter(item => {
+                const url = new URL(item.link);
+                const key = `${url.origin}${url.pathname}`.toLowerCase();
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
             this.page++;
             this.setState(() => {
-                this.data.list.push(...items);
+                this.data.list.push(...newItems);
                 this.data.loading = false;
                 this.data.hasMore = items.length > 0;
             });
@@ -116,6 +127,28 @@ class MainController extends Controller {
             showToast(`${e}\n${e.stack}`);
             this.setState(() => { this.data.loading = false; });
         }
+    }
+
+    parseInitialItems(text) {
+        const doc = HTMLParser.parse(text);
+        const items = [];
+        for (const node of doc.querySelectorAll('.manga-list-2 li')) {
+            const linkNode = node.querySelector('.manga-list-2-title a');
+            const imageNode = node.querySelector('.manga-list-2-cover-img');
+            const subtitleNode = node.querySelector('.manga-list-2-tip');
+            if (!linkNode || !imageNode) continue;
+            const link = linkNode.getAttribute('href');
+            const picture = imageNode.getAttribute('src') || imageNode.getAttribute('data-src');
+            if (!link || !picture) continue;
+            items.push({
+                title: linkNode.text.trim(),
+                link: new URL(link, this.url).toString(),
+                picture: new URL(picture, this.url).toString(),
+                pictureHeaders: { Referer: this.url },
+                subtitle: subtitleNode ? subtitleNode.text.trim() : ''
+            });
+        }
+        return items;
     }
 
     parseParams(text) {
