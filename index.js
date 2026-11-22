@@ -62,9 +62,9 @@ class IndexController extends Controller {
                     hot: '/manhua-list-st2/',
                     new: '/manhua-list-st2-s18/'
                 }),
-                listTabs('限制級', 'tag-61', {
+                listTabs('限制級', '18-x', {
                     update: '/manhua-list-tag61-s2/',
-                    hot: '/manhua-list-tag61/',
+                    hot: '/manhua-18-x/',
                     new: '/manhua-list-tag61-s18/'
                 }),
                 ...genreTabs.map(genre => listTabs(genre.title, `tag-${genre.tagId}`, {
